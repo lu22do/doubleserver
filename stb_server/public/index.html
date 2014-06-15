@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="../../assets/ico/favicon.ico">
+
+    <title>Jumbotron Template for Bootstrap</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <ul class="nav navbar-nav">
+          <li class="navbar-text">Status: <span id="status">Disconnected</span></li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Connect as<span class="caret"></span></a>
+            <ul id="connectas-dropdown" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+              <li><a id="stb" tabindex="-1" href="#">stb</a></li>
+              <li><a id="secscr1" tabindex="-1" href="#">second screen 1</a></li>
+              <li><a id="secscr2" tabindex="-1" href="#">second screen 2</a></li>
+              <li><a id="secscr3" tabindex="-1" href="#">second screen 3</a></li>
+            </ul>
+          </li>
+        </ul>      
+    </div>
+
+    <iframe src="" frameborder="0"></iframe>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/socket.io.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

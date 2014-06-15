@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+var debug = require('debug')('stb_server');
+var app = require('../app');
+
+var port = 3001;
+
+app.server.listen(port, function() {
+  console.log('Listening on port ' + port);
+});
