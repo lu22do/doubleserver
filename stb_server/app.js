@@ -12,12 +12,54 @@ var zlib = require('zlib');
 var app = express();
 app.server = require('http').Server(app);
 var io = require('socket.io')(app.server);
+var ioclient = require('socket.io-client');
 
-io.sockets.on('connection', function (socket) {
-  socket.emit('connect_ok', { client: socket.request._query.client });
-  socket.on('my other event', function (data) {
-    console.log(data);
-  });
+var io_clients = [];
+
+// socket io commands:
+// client -> server    connection 
+// server -> client    app_start_req(url)
+// server -> client    app_stop_req
+
+var headend_socket = ioclient.connect('http://localhost:3000?client=stb_server');
+headend_socket.on('app_start_req', function(data) {
+    console.log('app_start_req from headend');
+    // 1- load multi device app
+    load(data.path + data.name, function() {
+        // 2- send to devices (stb, second screens)
+        io_clients['stb'].emit('app_start_req', {url: 'stb_app'});
+        if (io_clients['secscr1']) {
+            io_clients['secscr1'].emit('app_start_req', {url: 'sec_scr_app'}); 
+        }
+        if (io_clients['secscr2']) {
+            io_clients['secscr2'].emit('app_start_req', {url: 'sec_scr_app'}); 
+        }
+        if (io_clients['secscr3']) {
+            io_clients['secscr3'].emit('app_start_req', {url: 'sec_scr_app'}); 
+        }
+    });
+});
+
+headend_socket.on('app_stop_req', function(data) {
+    console.log('app_stop_req from headend');
+    // tell all devices to stop the app
+    io_clients['stb'].emit('app_stop_req');
+    if (io_clients['secscr1']) {
+        io_clients['secscr1'].emit('app_stop_req'); 
+    }
+    if (io_clients['secscr2']) {
+        io_clients['secscr2'].emit('app_stop_req'); 
+    }
+    if (io_clients['secscr3']) {
+        io_clients['secscr3'].emit('app_stop_req'); 
+    }
+});
+
+io.on('connection', function (socket) {
+    console.log('connection from ' + socket.request._query.client);
+    io_clients[socket.request._query.client] = socket;
+
+    socket.emit('connect_ok', { client: socket.request._query.client });
 });
 
 var routes = require('./routes/index');
@@ -92,17 +134,25 @@ app.use('/users', users);
 //     });
 // });
 
-setTimeout(function() {
+// setTimeout(load('http://localhost:3000/multiscreen_apps/app1'), 500);
+
+
+function load(url, cb) {
     console.log('[STB SERVER] headend_port = ' + app.get('headend_port'));
-    request('http://localhost:3000/multiscreen_app.zip').
+
+    request(url).
         pipe(unzip.Extract({path: '.'})).
         on('close', function() {
-            console.error('all writes are now complete.');
+            console.error('app downloaded');
+
+            /* with dynamic route insertion - no way to remove and specify order */
             var stb_route = require(path.join(app_path, 'routes/stb_app'));
             var sec_scr_route = require(path.join(app_path, 'routes/sec_scr_app'));
 
             app.use('/stb_app', stb_route);
             app.use('/sec_scr_app', sec_scr_route);
+
+            cb();
         });
 
 /* with tar 
@@ -128,6 +178,6 @@ setTimeout(function() {
             fs.createReadStream('path/to/archive.zip').pipe(unzip.Extract({ path: 'output/path' }));
         });
 */
-}, 500);
+};
 
 module.exports = app;

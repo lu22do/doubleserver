@@ -14,6 +14,26 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
+app.server = require('http').Server(app);
+var io = require('socket.io')(app.server);
+
+var io_clients = [];
+
+io.on('connection', function (socket) {
+    console.log('connection from ' + socket.request._query.client);
+    io_clients[socket.request._query.client] = socket;
+
+    socket.on('app_start_req', function (data) {
+        console.log('app_start_req');
+        data.path = 'http://localhost:3000/multiscreen_apps/';
+        io_clients['stb_server'].emit('app_start_req', data);
+    });
+
+    socket.on('app_stop_req', function (data) {
+        console.log('app_stop_req');
+        io_clients['stb_server'].emit('app_stop_req', data);
+    });
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -29,14 +49,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 
-app.get('/multiscreen_app.zip', function(req, res) {
-    console.log('get me ' + process.cwd());
+app.get('/multiscreen_apps/:app', function(req, res) {
+    var app = req.params.app;
+    console.log('get app =' + app);
 
     res.writeHead(200, {
         'Content-Type': 'application/zip'
     });
 
-    zipdir('./multiscreen_app', function (err, buffer) {
+    zipdir('./multiscreen_apps/' + app, function (err, buffer) {
         res.end(buffer);
     });
 
